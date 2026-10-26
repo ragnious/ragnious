@@ -49,8 +49,11 @@ if (!IsInternetAvailable()) {
 }
 
 ; UPDATER: leftovers of a finished update (the previous version is renamed to .old while the new one starts)
-try FileDelete(A_ScriptFullPath ".old")
+CleanupOldVersion(A_ScriptFullPath ".old")               ; retries until the previous process has closed (a running .exe cannot be deleted before that)
 try FileDelete(A_Temp "\Ragnious_update.download")
+for i, arg in A_Args                                     ; started by an update that gave the new version a new file name: the previous file is removed
+    if (arg = "/cleanup" && i < A_Args.Length)
+        CleanupOldVersion(A_Args[i + 1])
 
 Persistent()
 DllCall("winmm\timeBeginPeriod", "UInt", 1)
@@ -145,8 +148,8 @@ mainGui.OnEvent("Close", CloseApplication)
 
 ; ================================ UPDATER ================================
 ; appVersion is the version of THIS build. updateInfoUrl must point to a small text file (HTTPS) that you publish next to your downloads:
-;     version=1.0.1
-;     url=https://example.com/Ragnious/Ragnious_1.2.0.ahk        (a .exe if you run the compiled app; same kind of file as the one running)
+;     version=1.2.0
+;     url=https://example.com/Ragnious/Ragnious_1.0.1.ahk        (a .exe if you run the compiled app; same kind of file as the one running)
 ;     sha256=<64 hex characters of the new file>                  (required: a download is refused if its hash does not match)
 ; (GitHub works well: put version.txt in the repo and use its raw link.)  Empty = the Update button explains that it is not set up yet.
 global appVersion := "1.0.1", appChannel := "Stable"
@@ -5171,6 +5174,12 @@ ParseUpdateInfo(text) {
         return ""
     if (!m.Has("sha256") || !RegExMatch(m["sha256"], "^[0-9A-Fa-f]{64}$"))
         return ""
+    ; optional: filename=Ragnious v1.0.2.ahk  -> the new version is saved under this name (same folder, same extension as the running file)
+    if (m.Has("filename")) {
+        ext := A_IsCompiled ? "exe" : "ahk"
+        if (!RegExMatch(m["filename"], "i)^[^\\/:*?`"<>|]{1,120}\." ext "$") || RegExMatch(m["filename"], "^\.+$"))
+            m.Delete("filename")                          ; unsafe or wrong kind of name: ignored, the current file name is kept
+    }
     return m
 }
 
@@ -5283,20 +5292,38 @@ Sha256OfFile(path) {
     return hex
 }
 
+; Deletes the previous version's file after an update that renamed the application (retries: the old process may still be closing).
+CleanupOldVersion(path, tries := 60) {
+    if (!FileExist(path))
+        return
+    try {
+        FileDelete(path)
+        return
+    }
+    if (tries > 0)
+        SetTimer(CleanupOldVersion.Bind(path, tries - 1), -500)
+}
+
 InstallUpdate() {
     global updateFile, updateInfo, mutexHandle, mutexName
     SetUpdateState("installing")
     SetStatus("Update verified. Installing version " updateInfo["version"] " and restarting...", "ready")
-    target := A_ScriptFullPath
-    backup := target ".old"
+    oldPath := A_ScriptFullPath
+    target := oldPath                                   ; the file the new version is saved as
+    if (updateInfo.Has("filename")) {
+        cand := A_ScriptDir "\" updateInfo["filename"]
+        if (cand = oldPath || !FileExist(cand))         ; a different file that already has that name is never overwritten
+            target := cand
+    }
+    backup := oldPath ".old"
     try FileDelete(backup)
     try {
-        FileMove(target, backup, 1)                     ; a running file can be renamed even when it cannot be overwritten
+        FileMove(oldPath, backup, 1)                    ; a running file can be renamed even when it cannot be overwritten
         FileMove(updateFile, target, 1)
     } catch {
         try {
-            if (!FileExist(target) && FileExist(backup))
-                FileMove(backup, target, 1)             ; roll back: the old version stays in place
+            if (!FileExist(oldPath) && FileExist(backup))
+                FileMove(backup, oldPath, 1)            ; roll back: the old version stays in place
         }
         SetUpdateState("available")
         SetStatus("Update failed: the application file could not be replaced (is its folder write-protected?).", "error")
@@ -5307,17 +5334,20 @@ InstallUpdate() {
         mutexHandle := 0
     }
     try {
-        Run(A_IsCompiled ? '"' target '"' : '"' A_AhkPath '" "' target '"', A_ScriptDir)
+        cleanArg := ' /cleanup "' backup '"'            ; the new copy deletes the previous version's file as soon as the old process has closed
+        Run(A_IsCompiled ? '"' target '"' cleanArg : '"' A_AhkPath '" "' target '"' cleanArg, A_ScriptDir)
     } catch {
         try {                                           ; the new copy could not start: put the old version back and carry on
             FileMove(target, updateFile, 1)
-            FileMove(backup, target, 1)
+            FileMove(backup, oldPath, 1)
         }
         mutexHandle := DllCall("CreateMutexW", "Ptr", 0, "Int", 0, "Str", mutexName, "Ptr")
         SetUpdateState("available")
         SetStatus("Update failed: the new version could not be started. The old version was restored.", "error")
         return
     }
+    ; Second safety net, independent of the new copy: a hidden helper waits ~2 s (until this process has closed) and deletes the old file.
+    try Run(A_ComSpec ' /c ping -n 3 127.0.0.1 >nul & del /f /q "' backup '"', , "Hide")
     CloseApplication()
 }
 
