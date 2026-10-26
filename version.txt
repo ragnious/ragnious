@@ -1,3 +1,3 @@
    version=1.0.1
-   url=https://raw.githubusercontent.com/ragnious/ragnious/refs/heads/main/version.txt?token=GHSAT0AAAAAAEMZEQP4UXZZHHYG5HOVHKW42W7XW4A
+   url=https://raw.githubusercontent.com/ragnious/ragnious/refs/heads/main/version.txt
    sha256=138DD849C08905C7B809771E59898180A1D189305CDFF7F408D462F0CA2456E2
