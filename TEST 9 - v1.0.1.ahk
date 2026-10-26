@@ -150,7 +150,7 @@ mainGui.OnEvent("Close", CloseApplication)
 ;     sha256=<64 hex characters of the new file>                  (required: a download is refused if its hash does not match)
 ; (GitHub works well: put version.txt in the repo and use its raw link.)  Empty = the Update button explains that it is not set up yet.
 global appVersion := "1.0.1", appChannel := "Stable"
-global updateInfoUrl := "https://raw.githubusercontent.com/ragnious/ragnious/refs/heads/main/version.txt?token=GHSAT0AAAAAAEMZEQP4UXZZHHYG5HOVHKW42W7XW4A"
+global updateInfoUrl := "https://raw.githubusercontent.com/ragnious/ragnious/refs/heads/main/version.txt"
 global updateState := "idle"          ; idle | checking | available | downloading | installing
 global updateInfo := "", updateReq := "", updateReqStart := 0, updateHovered := false, updateFile := ""
 updateBtn := "", updateSep := ""
