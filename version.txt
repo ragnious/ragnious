@@ -1,4 +1,4 @@
    version=1.0.1
    url=https://raw.githubusercontent.com/ragnious/ragnious/refs/heads/main/v1.0.1.ahk
-   sha256=726ECBABD63745F955716AEED9F4BADA2C26EC75C63411EAAA6A2F863C5D56B3
+   sha256=423E5521B629EF90B6E72304D3E5F87B7C7E1BE2FDD731F5843382F6F5F5F835
    filename=Ragnious v1.0.1.ahk
