@@ -1,4 +1,4 @@
-   version=1.0.1 a7a
+   version=1.0.0 Beta
    url=https://raw.githubusercontent.com/ragnious/ragnious/refs/heads/main/v1.0.1.exe
    sha256=3140C7F76EE5AC11BAEE22F8AC3D314BFA979B02BA091E07AC1E191E688C1E59
    filename=Ragnious v1.0.1.exe
