@@ -1,4 +1,4 @@
    version=1.0.0 Stable
-   url=https://raw.githubusercontent.com/ragnious/ragnious/refs/heads/main/v1.0.1.exe
+   url=https://raw.githubusercontent.com/ragnious/ragnious/refs/heads/main/v1.0.0.exe
    sha256=1
    filename=Ragnious v1.0.1.exe
