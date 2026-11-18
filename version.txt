@@ -1,4 +1,4 @@
-   version=1.0.0 Stable
+   version=1.0.2 Stable
    url=https://raw.githubusercontent.com/ragnious/ragnious/refs/heads/main/v1.0.1.exe
    sha256=A9F60DED595AED5201A6351CF328E13BAB58BA3A11B34EC3D48D461A76D9A657
    filename=Ragnious v1.0.1.exe
